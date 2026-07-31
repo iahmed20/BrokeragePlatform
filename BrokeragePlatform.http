@@ -1,0 +1,6 @@
+@BrokeragePlatform_HostAddress = http://localhost:5078
+
+GET {{BrokeragePlatform_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
