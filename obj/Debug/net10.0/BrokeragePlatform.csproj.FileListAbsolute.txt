@@ -146,3 +146,7 @@
 /Users/murr/BrokeragePlatform/obj/Debug/net10.0/BrokeragePlatform.pdb
 /Users/murr/BrokeragePlatform/obj/Debug/net10.0/BrokeragePlatform.genruntimeconfig.cache
 /Users/murr/BrokeragePlatform/obj/Debug/net10.0/ref/BrokeragePlatform.dll
+/Users/murr/BrokeragePlatform/obj/Debug/net10.0/BrokeragePlatform.sourcelink.json
+/Users/murr/BrokeragePlatform/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/murr/BrokeragePlatform/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/murr/BrokeragePlatform/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll
