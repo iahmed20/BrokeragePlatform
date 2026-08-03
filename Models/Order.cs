@@ -11,6 +11,6 @@ public class Order
     public decimal QuantityFilled { get; set; } = 0;
     public string Status { get; set; } = "OPEN";  // OPEN, PARTIAL, FILLED, CANCELLED, REJECTED
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
     public decimal RemainingQty => Quantity - QuantityFilled;
+    
 }

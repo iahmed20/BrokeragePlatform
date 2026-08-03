@@ -6,7 +6,7 @@ builder.Services.AddDbContext<BrokerageContext>(options =>
     options.UseSqlite("Data Source=brokerage.db"));
     
 builder.Services.AddControllers();
-
+builder.Services.AddHostedService<PriceTickerService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -21,6 +21,7 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BrokerageContext>();
+
     if (!db.Securities.Any())
     {
         db.Securities.AddRange(
@@ -29,6 +30,27 @@ using (var scope = app.Services.CreateScope())
             new Security { Symbol = "MEOW", Name = "Meow Industries" },
             new Security { Symbol = "TUNA", Name = "Tuna Holdings" },
             new Security { Symbol = "YARN", Name = "Yarn Dynamics" }
+        );
+        db.SaveChanges();
+    }
+
+    if (!db.Accounts.Any())
+    {
+        var alice = new Account { OwnerName = "Alice Trader" };
+        var bob = new Account { OwnerName = "Bob Investor" };
+
+        db.Accounts.AddRange(alice, bob);
+        db.SaveChanges(); 
+
+        db.LedgerEntries.AddRange(
+            new LedgerEntry {
+                AccountId = alice.AccountId, EntryType = "CASH",
+                Amount = 10000, ReferenceType = "DEPOSIT", ReferenceId = 0
+            },
+            new LedgerEntry {
+                AccountId = bob.AccountId, EntryType = "CASH",
+                Amount = 5000, ReferenceType = "DEPOSIT", ReferenceId = 0
+            }
         );
         db.SaveChanges();
     }

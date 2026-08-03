@@ -21,7 +21,7 @@ public class AccountsController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(account);
     }
-
+    
     // GET /api/accounts/5
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAccount(int id)
