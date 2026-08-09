@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BrokeragePlatform")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+10b14ba96f06d0757091c9f5141358e655558c99")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e0c9a93005f888c061cd8f664b15f0173656adb2")]
 [assembly: System.Reflection.AssemblyProductAttribute("BrokeragePlatform")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BrokeragePlatform")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

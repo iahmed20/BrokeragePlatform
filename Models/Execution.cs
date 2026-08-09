@@ -2,8 +2,7 @@
 public class Execution
 {
     public long ExecutionId { get; set; }
-    public long BuyOrderId { get; set; }
-    public long SellOrderId { get; set; }
+    public long OrderId { get; set; }
     public string Symbol { get; set; } = "";
     public decimal Price { get; set; }
     public decimal Quantity { get; set; }
