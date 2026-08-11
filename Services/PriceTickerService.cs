@@ -37,7 +37,7 @@ public class PriceTickerService : BackgroundService
                 await db.SaveChangesAsync();
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken); 
+            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken); 
         }
     }
-}
+} 

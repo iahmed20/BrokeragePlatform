@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 public class MatchingEngine
 {
     private readonly BrokerageContext _db;
-
+    
     public MatchingEngine(BrokerageContext db) => _db = db;
 
     public async Task<Order> ExecuteMarketOrder(Order order)
