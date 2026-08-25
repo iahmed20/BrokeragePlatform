@@ -5,3 +5,6 @@ Brokerage Platform simulator
 
 Stack:
 ASP.NET/C#
+
+Frontend:
+https://github.com/iahmed20/vite-frontend
