@@ -14,27 +14,34 @@ public class SecuritiesController : ControllerBase
         _db = db;
     }
 
-    // // GET /api/securities
-    // [HttpGet]
-    // public async Task<IActionResult> ListSecurities()
-    // {   
-        
-    //     var securities = await _db.Securities.ToListAsync();
-    //     return Ok(securities);
-    // }
 
-    [HttpGet]
+   [HttpGet]
     public async Task<IActionResult> GetPrices()
-    {    
-        var fiveMinutesAgo = DateTime.UtcNow.AddMinutes(-5);
-        var ticks = await _db.PriceTicks
-            .Where(p => p.Timestamp >= fiveMinutesAgo)
-            .OrderBy(p => p.Timestamp)
+    {
+        var allTicks = await _db.PriceTicks
+            .OrderByDescending(p => p.Timestamp)
             .ToListAsync();
 
-        var grouped = ticks.GroupBy(p => p.Symbol);
-            
+        var grouped = allTicks
+            .GroupBy(p => p.Symbol)
+            .Select(g => g.Take(30).OrderBy(p => p.Timestamp).ToList());
+
         return Ok(grouped);
     }
+
+    [HttpGet("{symbol}/prices")]
+    public async Task<IActionResult> GetPricesForSymbol(string symbol)
+    {
+        var ticks = await _db.PriceTicks
+            .Where(p => p.Symbol == symbol)
+            .OrderByDescending(p => p.Timestamp)
+            .Take(30)
+            .ToListAsync();
+
+        ticks.Reverse(); // put back in chronological order (oldest -> newest) for the chart
+
+        return Ok(ticks);
+    }
+    
 
 }

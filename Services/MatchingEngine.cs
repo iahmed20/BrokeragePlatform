@@ -1,30 +1,43 @@
-using System.Formats.Tar;
 using Microsoft.EntityFrameworkCore;
+
 public class MatchingEngine
 {
     private readonly BrokerageContext _db;
-    
+
     public MatchingEngine(BrokerageContext db) => _db = db;
 
     public async Task<Order> ExecuteMarketOrder(Order order)
     {
-        var price = await GetLatestPrice(order.Symbol);
-        var execution = await CreateExecution(order, price, order.Quantity);
-        await ApplyLedgerEntries(order, execution);
-        UpdateOrderStatus(order, order.Quantity);
-        await _db.SaveChangesAsync();
+        using var transaction = await _db.Database.BeginTransactionAsync();
+        try
+        {
+            var price = await GetLatestPrice(order.Symbol);
+            var execution = await CreateExecution(order, price, order.Quantity);
+            await ApplyLedgerEntries(order, execution);
+            UpdateOrderStatus(order, order.Quantity);
+
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+
         return order;
     }
 
     private async Task<decimal> GetLatestPrice(string symbol)
     {
-         var priceTick = await _db.PriceTicks
-        .Where(p => p.Symbol == symbol)
-        .OrderByDescending(p => p.Timestamp)
-        .FirstOrDefaultAsync();
+        var priceTick = await _db.PriceTicks
+            .Where(p => p.Symbol == symbol)
+            .OrderByDescending(p => p.Timestamp)
+            .FirstOrDefaultAsync();
 
         return priceTick?.Price ?? 0;
     }
+
     private async Task<Execution> CreateExecution(Order order, decimal price, decimal qty)
     {
         var execution = new Execution
@@ -36,10 +49,10 @@ public class MatchingEngine
         };
 
         _db.Executions.Add(execution);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(); // still needed here so execution.ExecutionId gets generated for the ledger entries below
         return execution;
-        
     }
+
     private async Task ApplyLedgerEntries(Order order, Execution execution)
     {
         decimal cashAmount = execution.Price * execution.Quantity;
@@ -49,7 +62,7 @@ public class MatchingEngine
         {
             cashAmount = -cashAmount;
         }
-        else 
+        else
         {
             positionAmount = -positionAmount;
         }
@@ -76,20 +89,20 @@ public class MatchingEngine
 
         _db.LedgerEntries.Add(cashEntry);
         _db.LedgerEntries.Add(positionEntry);
-
-        await _db.SaveChangesAsync();
+        // no SaveChangesAsync here anymore — saved together at the end of ExecuteMarketOrder
     }
+
     private void UpdateOrderStatus(Order order, decimal filledQty)
     {
-       if (filledQty >= order.Quantity) {
+        if (filledQty >= order.Quantity)
+        {
             order.Status = "FILLED";
-       } else if (filledQty < order.Quantity)
-       {
+        }
+        else if (filledQty < order.Quantity)
+        {
             order.Status = "PARTIAL";
-       }
+        }
 
-       order.QuantityFilled = filledQty;
-
+        order.QuantityFilled = filledQty;
     }
-
 }
