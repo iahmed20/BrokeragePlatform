@@ -14,6 +14,7 @@ public class BrokerageContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
     public DbSet<Strategy> Strategies => Set<Strategy>();
+    public DbSet<StrategyVersion> StrategyVersions => Set<StrategyVersion>();
     public DbSet<StrategySubmission> StrategySubmissions => Set<StrategySubmission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,11 +27,33 @@ public class BrokerageContext : DbContext
         modelBuilder.Entity<LoginToken>()
             .HasIndex(t => t.TokenHash).IsUnique();
 
-        modelBuilder.Entity<Strategy>()
-            .HasIndex(s => s.AccountId).IsUnique();
+        modelBuilder.Entity<Strategy>(e =>
+        {
+            e.Property(s => s.OwnerId).HasMaxLength(64);
+            e.Property(s => s.Name).HasMaxLength(100);
+            e.HasIndex(s => new { s.OwnerId, s.Name })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL"); // a deleted strategy's name can be reused
+        });
 
-        modelBuilder.Entity<StrategySubmission>()
-            .HasIndex(s => s.AccountId);
+        modelBuilder.Entity<StrategyVersion>(e =>
+        {
+            e.HasKey(v => new { v.StrategyId, v.Version });
+            e.Property(v => v.Note).HasMaxLength(200);
+            e.HasOne(v => v.Strategy)
+                .WithMany(s => s.Versions)
+                .HasForeignKey(v => v.StrategyId)
+                .OnDelete(DeleteBehavior.Restrict); // strategies are soft-deleted; versions are kept
+        });
+
+        modelBuilder.Entity<StrategySubmission>(e =>
+        {
+            e.HasIndex(s => s.AccountId);
+            e.HasOne(s => s.Version)
+                .WithMany()
+                .HasForeignKey(s => new { s.StrategyId, s.StrategyVersion })
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<LedgerEntry>()
             .Property(l => l.Amount).HasColumnType("decimal(18,4)");
