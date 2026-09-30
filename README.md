@@ -1,7 +1,8 @@
 Brokerage Platform simulator
 - Trade Stocks!
 - Make an Account!
-- Thats all you can do really
+- Write Scripts to Trade!
+- Trade to Win
 
 Stack:
 ASP.NET/C#
