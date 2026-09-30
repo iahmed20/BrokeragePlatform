@@ -12,10 +12,48 @@ public class BrokerageContext : DbContext
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<PriceTick> PriceTicks => Set<PriceTick>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
+    public DbSet<Strategy> Strategies => Set<Strategy>();
+    public DbSet<StrategyVersion> StrategyVersions => Set<StrategyVersion>();
+    public DbSet<StrategySubmission> StrategySubmissions => Set<StrategySubmission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Security>().HasKey(s => s.Symbol);
+
+        modelBuilder.Entity<Account>()
+            .HasIndex(a => a.Email).IsUnique();
+
+        modelBuilder.Entity<LoginToken>()
+            .HasIndex(t => t.TokenHash).IsUnique();
+
+        modelBuilder.Entity<Strategy>(e =>
+        {
+            e.Property(s => s.OwnerId).HasMaxLength(64);
+            e.Property(s => s.Name).HasMaxLength(100);
+            e.HasIndex(s => new { s.OwnerId, s.Name })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL"); // a deleted strategy's name can be reused
+        });
+
+        modelBuilder.Entity<StrategyVersion>(e =>
+        {
+            e.HasKey(v => new { v.StrategyId, v.Version });
+            e.Property(v => v.Note).HasMaxLength(200);
+            e.HasOne(v => v.Strategy)
+                .WithMany(s => s.Versions)
+                .HasForeignKey(v => v.StrategyId)
+                .OnDelete(DeleteBehavior.Restrict); // strategies are soft-deleted; versions are kept
+        });
+
+        modelBuilder.Entity<StrategySubmission>(e =>
+        {
+            e.HasIndex(s => s.AccountId);
+            e.HasOne(s => s.Version)
+                .WithMany()
+                .HasForeignKey(s => new { s.StrategyId, s.StrategyVersion })
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<LedgerEntry>()
             .Property(l => l.Amount).HasColumnType("decimal(18,4)");

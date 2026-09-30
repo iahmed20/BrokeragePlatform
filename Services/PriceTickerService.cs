@@ -6,6 +6,9 @@ public class PriceTickerService : BackgroundService
     private readonly IServiceProvider _services;
     private readonly Random _random = new();
 
+    // Each tick simulates one trading day, so annualized drift/volatility apply with dt = 1/252
+    private const double Dt = 1.0 / 252.0;
+
     public PriceTickerService(IServiceProvider services)
     {
         _services = services;
@@ -18,26 +21,40 @@ public class PriceTickerService : BackgroundService
             using (var scope = _services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<BrokerageContext>();
-                var symbols = await db.Securities.Select(s => s.Symbol).ToListAsync();
+                var securities = await db.Securities.ToListAsync();
 
-                foreach (var symbol in symbols)
+                foreach (var security in securities)
                 {
                     var lastTick = await db.PriceTicks
-                        .Where(p => p.Symbol == symbol)
+                        .Where(p => p.Symbol == security.Symbol)
                         .OrderByDescending(p => p.Timestamp)
                         .FirstOrDefaultAsync();
 
-                    decimal lastPrice = lastTick?.Price ?? 100m; 
-                    decimal change = (decimal)(_random.NextDouble() - 0.5) * 2;
-                    decimal newPrice = Math.Max(1, lastPrice + change); 
+                    double lastPrice = (double)(lastTick?.Price ?? 100m);
 
-                    db.PriceTicks.Add(new PriceTick { Symbol = symbol, Price = newPrice });
+                    // Geometric Brownian motion (exact solution over one step):
+                    // S(t+dt) = S(t) * exp((mu - sigma^2 / 2) * dt + sigma * sqrt(dt) * Z)
+                    double mu = security.Drift;
+                    double sigma = security.Volatility;
+                    double z = NextStandardNormal();
+                    double newPrice = lastPrice * Math.Exp(
+                        (mu - 0.5 * sigma * sigma) * Dt + sigma * Math.Sqrt(Dt) * z);
+
+                    db.PriceTicks.Add(new PriceTick { Symbol = security.Symbol, Price = (decimal)newPrice });
                 }
 
                 await db.SaveChangesAsync();
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken); 
+            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
+    }
+
+    // Box-Muller transform: two uniform samples -> one standard normal sample
+    private double NextStandardNormal()
+    {
+        double u1 = 1.0 - _random.NextDouble(); // (0, 1], avoids Log(0)
+        double u2 = _random.NextDouble();
+        return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
     }
 } 
