@@ -1,0 +1,19 @@
+# Build output
+bin/
+obj/
+
+# Local SQLite database (the app uses PostgreSQL now)
+*.db
+*.db-shm
+*.db-wal
+
+# Terraform provider cache and local state
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Editor / OS
+.vs/
+.vscode/
+*.user
+.DS_Store
