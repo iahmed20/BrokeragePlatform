@@ -30,12 +30,14 @@ public class SecuritiesController : ControllerBase
     }
 
     [HttpGet("{symbol}/prices")]
-    public async Task<IActionResult> GetPricesForSymbol(string symbol)
+    public async Task<IActionResult> GetPricesForSymbol(string symbol, [FromQuery] int limit = 30)
     {
+        limit = Math.Clamp(limit, 1, 5000);
+
         var ticks = await _db.PriceTicks
             .Where(p => p.Symbol == symbol)
             .OrderByDescending(p => p.Timestamp)
-            .Take(30)
+            .Take(limit)
             .ToListAsync();
 
         ticks.Reverse(); // put back in chronological order (oldest -> newest) for the chart
