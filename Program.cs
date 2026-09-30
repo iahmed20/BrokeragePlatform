@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Local dev: set with `dotnet user-secrets set ConnectionStrings:Brokerage "..."`; containers: ConnectionStrings__Brokerage
+var connectionString = builder.Configuration.GetConnectionString("Brokerage")
+    ?? throw new InvalidOperationException("Connection string 'Brokerage' is not configured.");
+
 builder.Services.AddDbContext<BrokerageContext>(options =>
-    options.UseSqlite("Data Source=brokerage.db"));
+    options.UseNpgsql(connectionString));
     
 builder.Services.AddControllers();
 builder.Services.AddHostedService<PriceTickerService>();
