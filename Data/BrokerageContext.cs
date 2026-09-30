@@ -13,6 +13,8 @@ public class BrokerageContext : DbContext
     public DbSet<PriceTick> PriceTicks => Set<PriceTick>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
+    public DbSet<Strategy> Strategies => Set<Strategy>();
+    public DbSet<StrategySubmission> StrategySubmissions => Set<StrategySubmission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +25,12 @@ public class BrokerageContext : DbContext
 
         modelBuilder.Entity<LoginToken>()
             .HasIndex(t => t.TokenHash).IsUnique();
+
+        modelBuilder.Entity<Strategy>()
+            .HasIndex(s => s.AccountId).IsUnique();
+
+        modelBuilder.Entity<StrategySubmission>()
+            .HasIndex(s => s.AccountId);
 
         modelBuilder.Entity<LedgerEntry>()
             .Property(l => l.Amount).HasColumnType("decimal(18,4)");
