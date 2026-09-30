@@ -12,10 +12,17 @@ public class BrokerageContext : DbContext
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<PriceTick> PriceTicks => Set<PriceTick>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<LoginToken> LoginTokens => Set<LoginToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Security>().HasKey(s => s.Symbol);
+
+        modelBuilder.Entity<Account>()
+            .HasIndex(a => a.Email).IsUnique();
+
+        modelBuilder.Entity<LoginToken>()
+            .HasIndex(t => t.TokenHash).IsUnique();
 
         modelBuilder.Entity<LedgerEntry>()
             .Property(l => l.Amount).HasColumnType("decimal(18,4)");
